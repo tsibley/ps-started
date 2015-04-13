@@ -2,12 +2,10 @@
 use strict;
 use warnings;
 use FindBin qw< $Script >;
-use Inline C => <<'C';
-#include <unistd.h>
-long clock_ticks() {
-    return sysconf(_SC_CLK_TCK);
+
+sub clock_ticks {
+    return `getconf CLK_TCK`;
 }
-C
 
 sub proc_stat {
     my $pid = shift;

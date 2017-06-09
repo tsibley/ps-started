@@ -2,31 +2,8 @@
 use strict;
 use warnings;
 use FindBin qw< $Script >;
-
-sub clock_ticks {
-    return `getconf CLK_TCK`;
-}
-
-sub proc_stat {
-    my $pid = shift;
-    open my $stat, '<', "/proc/$pid/stat"
-        or die "can't open /proc/$pid/stat: $!\n";
-    return split ' ', <$stat>;
-}
-
-sub sys_stat {
-    my %data;
-    open my $stat, '<', "/proc/stat"
-        or die "can't open /proc/stat: $!\n";
-    while (<$stat>) {
-        my ($label, $values) = split ' ', $_, 2;
-        $values = [ split ' ', $values ];
-        $data{$label} = $values;
-    }
-    return \%data;
-}
-
 use Getopt::Long;
+
 my %opt;
 GetOptions(\%opt, 'age', 'localtime');
 
@@ -52,4 +29,28 @@ if ($opt{'age'}) {
     print scalar localtime($started), "\n";
 } else {
     printf "%d\n", $started;
+}
+exit 0;
+
+sub clock_ticks {
+    return `getconf CLK_TCK`;
+}
+
+sub proc_stat {
+    my $pid = shift;
+    open my $stat, '<', "/proc/$pid/stat"
+        or die "can't open /proc/$pid/stat: $!\n";
+    return split ' ', <$stat>;
+}
+
+sub sys_stat {
+    my %data;
+    open my $stat, '<', "/proc/stat"
+        or die "can't open /proc/stat: $!\n";
+    while (<$stat>) {
+        my ($label, $values) = split ' ', $_, 2;
+        $values = [ split ' ', $values ];
+        $data{$label} = $values;
+    }
+    return \%data;
 }

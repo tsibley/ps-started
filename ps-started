@@ -19,9 +19,9 @@ die "pid must be numeric\n"
 die "only one of --age or --localtime supported\n"
     if $opt{'age'} and $opt{'localtime'};
 
-my $since_boot = int((proc_stat($pid))[21] / clock_ticks());
-my $booted     = sys_stat->{btime}[0];
-my $started    = $booted + $since_boot;
+my $started = -d "/proc"
+    ? started_via_proc($pid)
+    : started_via_ps($pid);
 
 if ($opt{'age'}) {
     print time - $started, "\n";
@@ -53,4 +53,20 @@ sub sys_stat {
         $data{$label} = $values;
     }
     return \%data;
+}
+
+sub started_via_proc {
+    my $pid = shift;
+    my $since_boot = int((proc_stat($pid))[21] / clock_ticks());
+    my $booted     = sys_stat->{btime}[0];
+    return $booted + $since_boot;
+}
+
+sub started_via_ps {
+    require POSIX;
+    require POSIX::strptime;
+
+    my $pid     = shift;
+    my $started = `ps -o lstart= $pid`;
+    return POSIX::strftime("%s", (POSIX::strptime($started, "%c"))[0..5]);
 }
